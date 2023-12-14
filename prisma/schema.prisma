@@ -39,7 +39,7 @@ model Employee {
   designationId String       @db.ObjectId
   designation   Designation? @relation(fields: [designationId], references: [id])
   leaveInfo     Json?
-
+  status  EMPLOYEESTATUS @default(NONASSIGNED)
   directProject EmployeeProject[] @relation(name: "ProjectEmployee")
   shadowProject EmployeeProject[] @relation(name: "ProjectShadow")
   leadOf Project[] @relation(name: "projectLead")
@@ -77,6 +77,12 @@ model EmployeeProject {
   project    Project  @relation(fields: [projectId], references: [id])
   employee   Employee @relation(name: "ProjectEmployee", fields: [employeeId], references: [id])
   shadow     Employee? @relation(name: "ProjectShadow", fields: [shadowId], references: [id])
+}
+
+enum EMPLOYEESTATUS {
+  NONASSIGNED
+  ASSIGNED
+  SHADOW
 }
 
 enum ROLE {

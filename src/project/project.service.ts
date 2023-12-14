@@ -47,7 +47,7 @@ export class ProjectService {
         }
       }
     }
-    if(filter) {
+    if (filter) {
       where = {
         ...where,
         ...filter
@@ -58,10 +58,10 @@ export class ProjectService {
       include,
       ...(page && limit && { skip: (page - 1) * limit, take: limit })
     })
-    
-    const projectsWithoutPagination = await this.prismaService.findMany(TABLES.EMPLOYEE, {
+
+    const projectsWithoutPagination = await this.prismaService.findMany(TABLES.PROJECT, {
       where,
-     include
+      include
     })
     return new ProjectResponseDto({
       message: "Projects retrieved successfully",
@@ -84,7 +84,9 @@ export class ProjectService {
   }
 
   async createProject(data: CreateProjectDto): Promise<ProjectResponseDto> {
-    const project = await this.prismaService.create(TABLES.EMPLOYEE, {
+    const employeeData = data?.employeeIds
+    delete data['employeeIds']
+    const project = await this.prismaService.create(TABLES.PROJECT, {
       ...data,
       ...(data.lead && {
         lead: {
@@ -102,19 +104,20 @@ export class ProjectService {
       }),
     })
 
-    if(data?.employeeIds && data.employeeIds.length) {
-      for (let i = 0; i < data.employeeIds.length; i++) {
-        const employee = data.employeeIds[i];
+    if (employeeData && employeeData.length) {
+      for (let i = 0; i < employeeData.length; i++) {
+        const employee = employeeData[i];
         for (let j = 0; j < employee?.shadow?.length; j++) {
           const shadow = employee?.shadow[j];
           this.prismaService.create(TABLES.EMPLOYEEPROJECT, {
             employeeId: employee.direct,
             projectId: project.id,
             shadowId: shadow
-        })
+          })
         }
       }
-    } 
+    }
+    this.refreshEmployeeStatus();
 
     return new ProjectResponseDto({
       message: "Project created successfully",
@@ -124,6 +127,8 @@ export class ProjectService {
 
   async updateProject(id: string, data: UpdateProjectDto): Promise<ProjectResponseDto> {
     await this.checkProject(id)
+    const employeeData = data?.employeeIds
+    delete data['employeeIds']
     const updatedProject = await this.prismaService.update(TABLES.PROJECT, {
       where: {
         id,
@@ -168,25 +173,26 @@ export class ProjectService {
     // Delete Existing Mapping
     await this.prismaService.delete(TABLES.EMPLOYEEPROJECT, {
       where: {
-        projectId :id,
+        projectId: id,
       }
     })
 
     // Create New  Mapping
-    if(data?.employeeIds && data.employeeIds.length) {
-      for (let i = 0; i < data.employeeIds.length; i++) {
-        const employee = data.employeeIds[i];
+    if (employeeData && employeeData.length) {
+      for (let i = 0; i < employeeData.length; i++) {
+        const employee = employeeData[i];
         for (let j = 0; j < employee?.shadow?.length; j++) {
           const shadow = employee?.shadow[j];
           this.prismaService.create(TABLES.EMPLOYEEPROJECT, {
             employeeId: employee.direct,
             projectId: id,
             shadowId: shadow
-        })
+          })
         }
       }
-    } 
-    
+    }
+    this.refreshEmployeeStatus();
+
     return new ProjectResponseDto({
       message: "Project updated successfully",
       data: updatedProject
@@ -236,5 +242,57 @@ export class ProjectService {
     throw new NotFoundException(PROJECT_NOT_EXISTS)
   }
 
+  async refreshEmployeeStatus() {
+
+    const directProjectEmployees = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
+      distinct:["employeeId"],
+      select: {
+        employeeId: true
+      }
+    })
+    const shadowProjectEmployees = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
+      distinct:["shadowId"],
+      select: {
+        shadowId: true
+      }
+    })
+    const directProjectEmployeeIds = directProjectEmployees.map((employee: any) => employee.employeeId)
+    const shadowProjectEmployeesIds = shadowProjectEmployees.map((employee: any) => employee.shadowId)
+    
+    await this.prismaService.updateMany(TABLES.EMPLOYEE, {
+      where: {
+        id: {
+          in: directProjectEmployeeIds
+        }
+      },
+      data: {
+        status: "ASSIGNED"
+      }
+    })
+
+    await this.prismaService.updateMany(TABLES.EMPLOYEE, {
+      where: {
+        id: {
+          in: shadowProjectEmployeesIds
+        }
+      },
+      data: {
+        status: "SHADOW"
+      }
+    })
+
+    await this.prismaService.updateMany(TABLES.EMPLOYEE, {
+      where: {
+        id: {
+          not: {
+            in: [...directProjectEmployeeIds, ...shadowProjectEmployeesIds]
+          }
+        }
+      },
+      data: {
+        status: "NONASSIGNED"
+      }
+    })
+  }
 
 }

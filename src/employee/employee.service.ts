@@ -54,10 +54,11 @@ export class EmployeeService {
         }
       }
     }
-    if(filter?.role) {
+    if(filter) {
       where = {
         ...where,
-        role: filter?.role
+        ...(filter?.role && {role: filter?.role}),
+        ...(filter?.status && {status: filter?.status})
       }
     }
     const employees = await this.prismaService.findMany(TABLES.EMPLOYEE, {
@@ -66,40 +67,18 @@ export class EmployeeService {
       ...(page && limit && { skip: (page - 1) * limit, take: limit })
     })
     
-    const employeesWithoutPagination = await this.prismaService.findMany(TABLES.EMPLOYEE, {
+    const totalEmployees = await this.prismaService.findMany(TABLES.EMPLOYEE, {
       where,
      include
     })
-    let employeesCount = 0;
-    // let response = [];
-    // for (let i = 0; i < employees.length; i++) {
-    //   const employee = employees[i];
-    //   if(projectKey) {
-    //     if(employee[projectKey].length) {
-    //       response = [...response, employee]
-    //     } 
-    //   } else {
-    //     if(!employee["directProject"].length && !employee["shadowProject"].length) response = [...response, employee]
-    //   }
-    // }
-    // for (let i = 0; i < employeesWithoutPagination.length; i++) {
-    //   const employee = employeesWithoutPagination[i];
-    //   if(projectKey) {
-    //     if(employee[projectKey].length) {
-    //       employeesCount += 1
-    //     } 
-    //   } else {
-    //     if(!employee["directProject"].length && !employee["shadowProject"].length) employeesCount += 1
-    //   }
-    // }
     return new EmployeeResponseDto({
       message: "Employees retrieved successfully",
       data: employees,
       meta: {
         current_page: page,
         item_count: limit,
-        total_items: employeesCount,
-        totalPage: Math.ceil(employeesCount / limit),
+        total_items: totalEmployees.length,
+        totalPage: Math.ceil(totalEmployees.length / limit),
       },
     })
   }
@@ -113,8 +92,18 @@ export class EmployeeService {
   }
 
   async createEmployee(data: CreateEmployeeDto): Promise<EmployeeResponseDto> {
+    const projectData = data?.projectIds
+    delete data['projectData']
+    
     const employee = await this.prismaService.create(TABLES.EMPLOYEE, {
       ...data,
+      leaveInfo: {
+        totalSickLeave: 20,
+        balanceSickLeave: 20,
+        totalCasualLeave: 20,
+        balanceCasualLeave: 20,
+        extraLeave: 20,
+      },
       ...(data.designation && {
         designation: {
           connect: {
@@ -124,16 +113,16 @@ export class EmployeeService {
       }),
     })
 
-    if (data?.projectIds && data.projectIds.length) {
-      for (let i = 0; i < data?.projectIds?.length; i++) {
-        const projectId = data.projectIds[i];
+    if (projectData && projectData.length) {
+      for (let i = 0; i < projectData?.length; i++) {
+        const projectId = projectData[i];
         this.prismaService.create(TABLES.EMPLOYEEPROJECT, {
           employeeId: employee.id,
           projectId: projectId,
         })
       }
     }
-
+    this.refreshEmployeeStatus();
     return new EmployeeResponseDto({
       message: "Employee created successfully",
       data: employee
@@ -142,6 +131,8 @@ export class EmployeeService {
 
   async updateEmployee(id: string, data: UpdateEmployeeDto): Promise<EmployeeResponseDto> {
     await this.checkEmployee(id)
+    const projectData = data?.projectIds
+    delete data['projectData']
     const updatedEmployee = await this.prismaService.update(TABLES.EMPLOYEE, {
       where: {
         id,
@@ -166,16 +157,16 @@ export class EmployeeService {
       }
     })
 
-    if (data?.projectIds && data.projectIds.length) {
-      for (let i = 0; i < data?.projectIds?.length; i++) {
-        const projectId = data.projectIds[i];
+    if (projectData && projectData.length) {
+      for (let i = 0; i < projectData?.length; i++) {
+        const projectId = projectData[i];
         this.prismaService.create(TABLES.EMPLOYEEPROJECT, {
           employeeId: id,
           projectId: projectId,
         })
       }
     }
-
+    this.refreshEmployeeStatus();
     return new EmployeeResponseDto({
       message: "Employee updated successfully",
       data: updatedEmployee
@@ -231,5 +222,57 @@ export class EmployeeService {
     throw new NotFoundException(EMPLOYEE_NOT_EXISTS)
   }
 
+  async refreshEmployeeStatus() {
+
+    const directProjectEmployees = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
+      distinct:["employeeId"],
+      select: {
+        employeeId: true
+      }
+    })
+    const shadowProjectEmployees = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
+      distinct:["shadowId"],
+      select: {
+        shadowId: true
+      }
+    })
+    const directProjectEmployeeIds = directProjectEmployees.map((employee: any) => employee.employeeId)
+    const shadowProjectEmployeesIds = shadowProjectEmployees.map((employee: any) => employee.shadowId)
+    
+    await this.prismaService.updateMany(TABLES.EMPLOYEE, {
+      where: {
+        id: {
+          in: directProjectEmployeeIds
+        }
+      },
+      data: {
+        status: "ASSIGNED"
+      }
+    })
+
+    await this.prismaService.updateMany(TABLES.EMPLOYEE, {
+      where: {
+        id: {
+          in: shadowProjectEmployeesIds
+        }
+      },
+      data: {
+        status: "SHADOW"
+      }
+    })
+
+    await this.prismaService.updateMany(TABLES.EMPLOYEE, {
+      where: {
+        id: {
+          not: {
+            in: [...directProjectEmployeeIds, ...shadowProjectEmployeesIds]
+          }
+        }
+      },
+      data: {
+        status: "NONASSIGNED"
+      }
+    })
+  }
 
 }

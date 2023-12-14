@@ -25,7 +25,7 @@ export class CreateProjectDto {
     @ApiProperty()
     @IsOptional()
     @IsNotEmpty()
-    employeeIds?: EmployeeShadow[];
+    employeeIds?: any;
 
     @ApiProperty()
     @IsString()
