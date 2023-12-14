@@ -5,10 +5,13 @@ export class Project {
     description: string;
     employeeIds: string;
     projectStatus: string;
+    lead?: string;
+    manager?: string;
     tools: string[];
     guide: string;
-    leadId: string;
-    managerId: string;
+    startDate: string;
+    endDate: string;
+
 }
 
 

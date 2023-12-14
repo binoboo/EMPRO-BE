@@ -35,7 +35,9 @@ async function seed() {
                 connect: {
                     id: "6568cf375f945c327873c012"
                 }
-            }
+            },
+            role: "ADMIN",
+            gender: "Male"
         },
         update: {}
     })
@@ -54,7 +56,9 @@ async function seed() {
                 connect: {
                     id: "6568cf375f945c327873c023"
                 }
-            }
+            },
+            role: "INTERN",
+            gender: "Male"
         },
         update: {}
     })
@@ -73,59 +77,60 @@ async function seed() {
                 connect: {
                     id: "6568cf375f945c327873c022"
                 }
-            }
+            },
+            role: "INTERN",
+            gender: "Male"
         },
         update: {}
     })
 
-    // await prisma.employee.create({
-    //     data: {
-    //       name: 'Bino',
-    //       phone: '9287628332',
-    //       email: 'bini@gmail.com',
-    //       designation: { connect: { id: '6568cf375f945c327873c021' } },
-    //       dateOfBirth: '25-06-1998',
-    //       dateOfJoin: '25-06-1998',
-    //       employeeId: 'FEC011',
-    //       leaveInfo: {
-    //         totalSickLeave: 1,
-    //         balanceSickLeave: 2,
-    //         totalCasualLeave: 3,
-    //         balanceCasualLeave: 4,
-    //         extraLeave: 2
-    //       }
-    //     }
-    //   })
+    await prisma.employee.create({
+        data: {
+          name: 'Bino',
+          phone: '9287628332',
+          email: 'bini@gmail.com',
+          designation: { connect: { id: '6568cf375f945c327873c021' } },
+          dateOfBirth: '25-06-1998',
+          dateOfJoin: '25-06-1998',
+          employeeId: 'FEC011',
+          role: "INTERN",
+        gender: "Male"
+        }
+      })
 
-    // await prisma.project.upsert({
-    //     where: {
-    //         id: "6568cf375f945c327873c033"
-    //     },
-    //     update: {},
-    //     create: {
-    //         id: "6568cf375f945c327873c033",
-    //         name: "FIDIO",
-    //         description: "Industry Management Software",
-    //         tools: ["VueJs", "Vite", "NodeJs", "Mongodb"],
-    //         projectStatus: "PROCESSING",
-    //         guide: "Guide",
-    //     }
-    // })
+    await prisma.project.upsert({
+        where: {
+            id: "6568cf375f945c327873c033"
+        },
+        update: {},
+        create: {
+            id: "6568cf375f945c327873c033",
+            name: "FIDIO",
+            description: "Industry Management Software",
+            tools: ["VueJs", "Vite", "NodeJs", "Mongodb"],
+            projectStatus: "PROCESSING",
+            guide: "Guide",
+            startDate: "2022-10-10",
+            endDate: "2023-10-10"
+        }
+    })
 
-    // await prisma.project.upsert({
-    //     where: {
-    //         id: "6568cf375f945c327873c034"
-    //     },
-    //     update: {},
-    //     create: {
-    //         id: "6568cf375f945c327873c034",
-    //         name: "OMNEX",
-    //         description: "Industry Management Software",
-    //         tools: ["ReactJs", "Vite", "NodeJs", "Postgres"],
-    //         projectStatus: "PROCESSING",
-    //         guide: "Guide",
-    //     }
-    // })
+    await prisma.project.upsert({
+        where: {
+            id: "6568cf375f945c327873c034"
+        },
+        update: {},
+        create: {
+            id: "6568cf375f945c327873c034",
+            name: "OMNEX",
+            description: "Industry Management Software",
+            tools: ["ReactJs", "Vite", "NodeJs", "Postgres"],
+            projectStatus: "PROCESSING",
+            guide: "Guide",
+            startDate: "2022-10-12",
+            endDate: "2023-10-12"
+        }
+    })
 
     // await prisma.employeeProject.create({
     //     data: {

@@ -12,6 +12,24 @@ export class ProjectService {
 
   async getProjects(page: number, limit: number, search: string, projectIds: string[], filter: object): Promise<ProjectResponseDto> {
     let where: any = {}
+    const include = {
+      lead: true,
+      employee: {
+        include: {
+          employee: {
+            include: {
+              designation: true
+            }
+          },
+          shadow: {
+            include: {
+              designation: true
+            }
+          },
+        }
+      },
+      manager: true
+    }
     if (search?.trim()) {
       where = {
         ...where,
@@ -37,29 +55,23 @@ export class ProjectService {
     }
     const projects = await this.prismaService.findMany(TABLES.PROJECT, {
       where,
-      include: {
-        lead: true,
-        employee: {
-          include: {
-            employee: {
-              include: {
-                designation: true
-              }
-            },
-            shadow: {
-              include: {
-                designation: true
-              }
-            },
-          }
-        },
-        manager: true
-      },
+      include,
       ...(page && limit && { skip: (page - 1) * limit, take: limit })
+    })
+    
+    const projectsWithoutPagination = await this.prismaService.findMany(TABLES.EMPLOYEE, {
+      where,
+     include
     })
     return new ProjectResponseDto({
       message: "Projects retrieved successfully",
-      data: projects
+      data: projects,
+      meta: {
+        current_page: page,
+        item_count: limit,
+        total_items: projectsWithoutPagination.length,
+        totalPage: Math.ceil(projectsWithoutPagination.length / limit),
+      },
     })
   }
 

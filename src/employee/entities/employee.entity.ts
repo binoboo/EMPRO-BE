@@ -1,12 +1,17 @@
 import { Type } from 'class-transformer';
+import { ROLE } from '../dto/employee.dto';
 
 export class Employee {
     name: string;
-    description: string;
-    employeeIds: string;
-    projectStatus: string;
-    tools: string[];
-    guide: string;
+    phone: string;
+    email: string;
+    designation: string;
+    dateOfBirth: string;
+    dateOfJoin: string;
+    employeeId: string;
+    projectIds: string[];
+    gender: string
+    role: ROLE;
 }
 
 

@@ -12,7 +12,7 @@ export class EmployeeService {
 
   async getEmployees(page: number, limit: number, search: string, employeeIds: string[], filter: any): Promise<EmployeeResponseDto> {
     let where: any = {}
-    let projectKey: string= filter?.projectStatus === "ASSIGNED" ? "directProject" : filter?.projectStatus === "SHADOW" ? "shadowProject" : "";
+    let projectKey: string= filter?.status.toUpperCase() === "ASSIGNED" ? "directProject" : filter?.status.toUpperCase() === "SHADOW" ? "shadowProject" : "";
     const include = {
       directProject: {
         include: {
@@ -54,6 +54,12 @@ export class EmployeeService {
         }
       }
     }
+    if(filter?.role) {
+      where = {
+        ...where,
+        role: filter?.role
+      }
+    }
     const employees = await this.prismaService.findMany(TABLES.EMPLOYEE, {
       where,
       include,
@@ -64,10 +70,31 @@ export class EmployeeService {
       where,
      include
     })
-    const employeesCount = employeesWithoutPagination?.filter((employee: any) => projectKey ? employee[projectKey].length : !employee['directProject'].length && !employee['shadowProject'].length)?.length || 0
+    let employeesCount = 0;
+    // let response = [];
+    // for (let i = 0; i < employees.length; i++) {
+    //   const employee = employees[i];
+    //   if(projectKey) {
+    //     if(employee[projectKey].length) {
+    //       response = [...response, employee]
+    //     } 
+    //   } else {
+    //     if(!employee["directProject"].length && !employee["shadowProject"].length) response = [...response, employee]
+    //   }
+    // }
+    // for (let i = 0; i < employeesWithoutPagination.length; i++) {
+    //   const employee = employeesWithoutPagination[i];
+    //   if(projectKey) {
+    //     if(employee[projectKey].length) {
+    //       employeesCount += 1
+    //     } 
+    //   } else {
+    //     if(!employee["directProject"].length && !employee["shadowProject"].length) employeesCount += 1
+    //   }
+    // }
     return new EmployeeResponseDto({
       message: "Employees retrieved successfully",
-      data: employees?.filter((employee: any) => projectKey ? employee[projectKey].length : !employee['directProject'].length && !employee['shadowProject'].length),
+      data: employees,
       meta: {
         current_page: page,
         item_count: limit,

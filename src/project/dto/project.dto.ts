@@ -51,6 +51,16 @@ export class CreateProjectDto {
     @IsString()
     @IsNotEmpty()
     guide: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    startDate: string;
+    
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    endDate: string;
 }
 
 export class UpdateProjectDto extends PartialType(CreateProjectDto) {}

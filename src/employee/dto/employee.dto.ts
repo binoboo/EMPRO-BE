@@ -78,8 +78,25 @@ export class CreateEmployeeDto {
     @IsNotEmpty()
     @IsOptional()
     projectIds: string[];
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    gender: string
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    role: ROLE;
 }
 
+export enum ROLE {
+    ADMIN = "ADMIN",
+    INTERN = "INTERN",
+    EMPLOYEE = "EMPLOYEE",
+    LEAD = "LEAD",
+    MANAGER = "MANAGER",
+}
 
 export class UpdateEmployeeDto extends PartialType(CreateEmployeeDto) { }
 
