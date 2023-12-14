@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs https//pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model LeaveInfo {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  totalSickLeave     Int
+  balanceSickLeave   Int
+  totalCasualLeave   Int
+  balanceCasualLeave Int
+  extraLeave         Int
+}
+
+model Designation {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  employees Employee[]
+}
+
+model Employee {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  employeeId  String
+  name        String
+  phone       String
+  email       String
+  dateOfBirth String
+  dateOfJoin  String
+  gender  String
+  role    ROLE
+  // team    String
+  designationId String       @db.ObjectId
+  designation   Designation? @relation(fields: [designationId], references: [id])
+  leaveInfo     Json?
+
+  directProject EmployeeProject[] @relation(name: "ProjectEmployee")
+  shadowProject EmployeeProject[] @relation(name: "ProjectShadow")
+  leadOf Project[] @relation(name: "projectLead")
+  managerOf Project[] @relation(name: "projectManager")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String
+  projectStatus String
+  tools         String[]
+  guide         String
+  startDate     String
+  endDate       String
+
+  leadId String?   @db.ObjectId
+  lead   Employee? @relation(name: "projectLead", fields: [leadId], references: [id])
+  
+  managerId String?   @db.ObjectId
+  manager   Employee? @relation(name: "projectManager", fields: [managerId], references: [id])
+  employee EmployeeProject[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmployeeProject {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId  String @db.ObjectId
+  employeeId String   @db.ObjectId
+  shadowId   String?   @db.ObjectId
+  project    Project  @relation(fields: [projectId], references: [id])
+  employee   Employee @relation(name: "ProjectEmployee", fields: [employeeId], references: [id])
+  shadow     Employee? @relation(name: "ProjectShadow", fields: [shadowId], references: [id])
+}
+
+enum ROLE {
+  ADMIN
+  INTERN
+  EMPLOYEE
+  TEAMLEAD
+  MANAGER
+}
