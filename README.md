@@ -26,7 +26,11 @@
 ```
 
 ```bash
+  npx prisma generate
+```
+
+```bash
   npm run dev
 ```
 
-- Open http://localhost:3000/api-docs#/ for swagger
+### Swagger : http://localhost:3000/api-docs#
