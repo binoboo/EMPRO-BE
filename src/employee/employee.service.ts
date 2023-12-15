@@ -152,11 +152,21 @@ export class EmployeeService {
 
     
     // Delete Existing Mapping
-    await this.prismaService.delete(TABLES.EMPLOYEEPROJECT, {
+    const employeeIds = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
       where: {
-        employeeId :id,
+        projectId: id,
       }
     })
+    const employeeId = employeeIds.map(project => project.id)
+    if (employeeId?.length) {
+
+      await this.prismaService.delete(TABLES.EMPLOYEEPROJECT, {
+        where: {
+          employeeId: employeeIds,
+        }
+      })
+    }
+    
 
     if (projectData && projectData.length) {
       for (let i = 0; i < projectData?.length; i++) {
