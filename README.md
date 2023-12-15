@@ -6,10 +6,10 @@
 
 ## Table of Contents
 
-- [Features](#features)
 - [Installation](#installation)
 
-## Steps
+
+## Installation
 
 
 ```bash
