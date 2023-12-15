@@ -62,13 +62,6 @@ export class OptionsService {
       }
     })
 
-    this.prismaService.employeeProject.findMany({
-      where: {
-        employeeId: {
-          in: totalEmployeeIds
-        }
-      }
-    })
 
     const directEmployee = await this.prismaService.findMany( TABLES.EMPLOYEEPROJECT,{
       distinct: "employeeId",
@@ -116,11 +109,16 @@ export class OptionsService {
       }
     }
   }
-  async employeePercentage() {
+  async chartData() {
     let employeeBar = []
+    let projectStatus = []
     const designationGroupby = await this.prismaService.groupBy(TABLES.EMPLOYEE,{
         by: ['designationId'],
         _count: true
+    })
+    const projectByStatus = await this.prismaService.groupBy(TABLES.PROJECT, {
+      by: ['projectStatus'],
+      _count: true
     })
     for (let i = 0; i < designationGroupby.length; i++) {
         const designationData = designationGroupby[i];
@@ -136,8 +134,21 @@ export class OptionsService {
         ]
         
     }
+    for (let i = 0; i < projectByStatus.length; i++) {
+      const projectStatu = projectByStatus[i];
+
+      projectStatus = [
+          ...projectStatus,
+          {
+              label: projectStatu.projectStatus,
+              count: projectStatu._count
+          }
+      ]
+      
+  }
     return {
-      employeeBar
+      employeeBar,
+      projectStatus
     }
   }
 }

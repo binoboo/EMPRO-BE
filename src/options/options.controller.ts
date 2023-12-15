@@ -36,7 +36,7 @@ export class OptionsController {
 
   @Get("/dashboard/chart")
   employeePercentage() {
-    return this.optionsService.employeePercentage();
+    return this.optionsService.chartData();
   }
   
 }
