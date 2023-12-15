@@ -6,5 +6,6 @@ export const TABLES = {
   EMPLOYEE: 'employee',
   LEAVEINFO: 'leaveInfo',
   DESIGNATION: 'designation',
+  SKILLS: 'skills',
   EMPLOYEEPROJECT: 'employeeProject',
 };

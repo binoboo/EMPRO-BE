@@ -108,7 +108,7 @@ export class ProjectController {
     })
     async deleteProject(
         @Param('id') id: string
-    ): Promise<ProjectResponseDto> {
+    ) {
         return this.projectService.deleteProject(id)
     }
 }

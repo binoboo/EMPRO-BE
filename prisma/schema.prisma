@@ -25,6 +25,11 @@ model Designation {
   employees Employee[]
 }
 
+model Skills {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+}
+
 model Employee {
   id          String @id @default(auto()) @map("_id") @db.ObjectId
   employeeId  String

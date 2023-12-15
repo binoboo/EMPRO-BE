@@ -10,7 +10,7 @@ export class ProjectService {
 
   constructor(private readonly prismaService: PrismaService) { }
 
-  async getProjects(page: number, limit: number, search: string, projectIds: string[], filter: object): Promise<ProjectResponseDto> {
+  async getProjects(page: number, limit: number, search: string, projectIds: string[], filter: any): Promise<ProjectResponseDto> {
     let where: any = {}
     const include = {
       lead: true,
@@ -50,7 +50,7 @@ export class ProjectService {
     if (filter) {
       where = {
         ...where,
-        ...filter
+        ...(filter?.projectStatus && {projectStatus: filter.projectStatus})
       }
     }
     const projects = await this.prismaService.findMany(TABLES.PROJECT, {
@@ -117,7 +117,7 @@ export class ProjectService {
         }
       }
     }
-    this.refreshEmployeeStatus();
+    await this.refreshEmployeeStatus();
 
     return new ProjectResponseDto({
       message: "Project created successfully",
@@ -191,7 +191,7 @@ export class ProjectService {
         }
       }
     }
-    this.refreshEmployeeStatus();
+    await this.refreshEmployeeStatus();
 
     return new ProjectResponseDto({
       message: "Project updated successfully",
@@ -199,17 +199,29 @@ export class ProjectService {
     })
   }
 
-  async deleteProject(id: string): Promise<ProjectResponseDto> {
-    const project = await this.checkProject(id)
+  async deleteProject(id: string) {
+    await this.checkProject(id)
+    const checkProject = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
+      where: {
+        projectId: id
+      }
+    })
+    const projectIds = checkProject.map(project => project.id)
+    await this.prismaService.deleteMany(TABLES.EMPLOYEEPROJECT, {
+      where: {
+        id: {
+          in: projectIds
+        }
+      }
+    })
     await this.prismaService.delete(TABLES.PROJECT, {
       where: {
         id,
       }
     })
-    return new ProjectResponseDto({
+    return {
       message: "Project deleted successfully",
-      data: project
-    })
+    }
   }
 
   async checkProject(id: string) {
@@ -256,8 +268,8 @@ export class ProjectService {
         shadowId: true
       }
     })
-    const directProjectEmployeeIds = directProjectEmployees.map((employee: any) => employee.employeeId)
-    const shadowProjectEmployeesIds = shadowProjectEmployees.map((employee: any) => employee.shadowId)
+    const directProjectEmployeeIds = directProjectEmployees.filter((employee: any) => Boolean(employee.employeeId)).map((employee: any) => employee.employeeId)
+    const shadowProjectEmployeesIds = shadowProjectEmployees.filter((employee: any) => Boolean(employee.shadowId)).map((employee: any) => employee.shadowId)
     
     await this.prismaService.updateMany(TABLES.EMPLOYEE, {
       where: {

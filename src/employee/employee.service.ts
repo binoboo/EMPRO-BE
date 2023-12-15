@@ -12,7 +12,8 @@ export class EmployeeService {
 
   async getEmployees(page: number, limit: number, search: string, employeeIds: string[], filter: any): Promise<EmployeeResponseDto> {
     let where: any = {}
-    let projectKey: string= filter?.status.toUpperCase() === "ASSIGNED" ? "directProject" : filter?.status.toUpperCase() === "SHADOW" ? "shadowProject" : "";
+    let projectKey: string= filter?.status ? ["ASSIGNED", "NONASSIGNED"].includes(filter.status) ?  filter.status : "SHADOW" : "";
+    
     const include = {
       directProject: {
         include: {
@@ -58,7 +59,7 @@ export class EmployeeService {
       where = {
         ...where,
         ...(filter?.role && {role: filter?.role}),
-        ...(filter?.status && {status: filter?.status})
+        ...(projectKey && {status: projectKey})
       }
     }
     const employees = await this.prismaService.findMany(TABLES.EMPLOYEE, {
@@ -93,7 +94,7 @@ export class EmployeeService {
 
   async createEmployee(data: CreateEmployeeDto): Promise<EmployeeResponseDto> {
     const projectData = data?.projectIds
-    delete data['projectData']
+    delete data['projectIds']
     
     const employee = await this.prismaService.create(TABLES.EMPLOYEE, {
       ...data,
@@ -122,7 +123,7 @@ export class EmployeeService {
         })
       }
     }
-    this.refreshEmployeeStatus();
+    await this.refreshEmployeeStatus();
     return new EmployeeResponseDto({
       message: "Employee created successfully",
       data: employee
@@ -132,7 +133,7 @@ export class EmployeeService {
   async updateEmployee(id: string, data: UpdateEmployeeDto): Promise<EmployeeResponseDto> {
     await this.checkEmployee(id)
     const projectData = data?.projectIds
-    delete data['projectData']
+    delete data['projectIds']
     const updatedEmployee = await this.prismaService.update(TABLES.EMPLOYEE, {
       where: {
         id,
@@ -166,24 +167,32 @@ export class EmployeeService {
         })
       }
     }
-    this.refreshEmployeeStatus();
+    await this.refreshEmployeeStatus();
     return new EmployeeResponseDto({
       message: "Employee updated successfully",
       data: updatedEmployee
     })
   }
 
-  async deleteEmployee(id: string): Promise<EmployeeResponseDto> {
-    const employee = await this.checkEmployee(id)
-    await this.prismaService.delete(TABLES.EMPLOYEE, {
+  async deleteEmployee(id: string) {
+    await this.checkEmployee(id)
+    const checkEmployees = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
       where: {
-        id,
+        employeeId: id,
+        shadowId: id
       }
     })
-    return new EmployeeResponseDto({
-      message: "Employee deleted successfully",
-      data: employee
+    const employeeIds = checkEmployees.map(project => project.id)
+    await this.prismaService.deleteMany(TABLES.EMPLOYEEPROJECT, {
+      where: {
+        id: {
+          in: employeeIds
+        }
+      }
     })
+    return {
+      message: "Employee deleted successfully",
+    }
   }
 
   async checkEmployee(id: string) {

@@ -1,46 +1,126 @@
-// import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+// import faker from 'faker';
+const prisma = new PrismaClient();
 
-// const prisma = new PrismaClient();
+async function seed() {
 
-// async function seed() {
 
-//     // await prisma.designation.createMany({
-//     //     data: [
-//     //         {id: "6568cf375f945c327873c021", name: "Trainee"},
-//     //         {id: "6568cf375f945c327873c022", name: "Software Engineer"},
-//     //         {id: "6568cf375f945c327873c023", name: "Senior Software Engineer"},
-//     //         {id: "6568cf375f945c327873c024", name: "Technology Analyst"},
-//     //         {id: "6568cf375f945c327873c025", name: "Technical lead"},
-//     //         {id: "6568cf375f945c327873c026", name: "Manager"},
-//     //         {id: "6568cf375f945c327873c027", name: "Architect"},
-//     //         {id: "6568cf375f945c327873c028", name: "Senior Architect"},
-//     //         {id: "6568cf375f945c327873c029", name: "Human Resource"},
-//     //         {id: "6568cf375f945c327873c010", name: "Designer"},
-//     //         {id: "6568cf375f945c327873c011", name: "CEO"},
-//     //         {id: "6568cf375f945c327873c012", name: "CTO"},
-//     //     ]
-//     // })
+    // const designationsWithoutInterns = await prisma.designation.findMany({
+    //     where: {
+    //       name: {
+    //         not: "intern",
+    //         mode: "insensitive"
+    //       }
+    //     }
+    //   })
+    
+    const total = await prisma.employee.count({})
+    let response = []
+    const designationGroupby = await prisma.employee.groupBy({
+        by: ['designationId'],
+        _count: true
+    })
+    for (let i = 0; i < designationGroupby.length; i++) {
+        const designationData = designationGroupby[i];
+        const designation = await prisma.designation.findUnique({
+            where: {id: designationData.designationId}
+        })
+        
+        response = [
+            ...response,
+            {
+                label: designation.name,
+                count: designationData._count
+            }
+        ]
+        
+    }
+    console.log(response)
+    //   const designationsWithoutInternIds = designationsWithoutInterns.map(designation => designation?.id)
 
-//     await prisma.employee.upsert({
-//         where: { id: "6568cf375f945c327873c021" },
-//         create: {
-//             id: "6568cf375f945c327873c021",
-//             name: "Alex",
-//             phone: "+91 8124460585",
-//             email: "alex@gands.com",
-//             dateOfBirth: "25-06-1978",
-//             dateOfJoin: "15-04-2015",
-//             employeeId: "FEC0001",
-//             designation: {
-//                 connect: {
-//                     id: "6568cf375f945c327873c012"
-//                 }
-//             },
-//             role: "ADMIN",
-//             gender: "Male"
-//         },
-//         update: {}
-//     })
+    //   const totalEmployees = await prisma.employee.count({
+    //     where: {
+    //         designationId: {
+    //             in : designationsWithoutInternIds
+    //         }
+    //     }
+    //   })
+    //   const totalInterns = await prisma.employee.count({
+    //     where: {
+    //         designationId: {
+    //             notIn : designationsWithoutInternIds
+    //         }
+    //     }
+    //   })
+
+    //   const directEmployee = await prisma.employeeProject.findMany({
+    //     distinct: "employeeId"
+    //   })
+    //   const shadowEmployee = await prisma.employeeProject.findMany({
+    //     distinct: "shadowId"
+    //   })
+
+    //   const totalBench = totalEmployees - (directEmployee.length + shadowEmployee.length)
+    //   console.log({
+    //     totalEmployees,
+    //     totalBench,
+    //     totalDirectEmployees: directEmployee.length,
+    //     totalShadowEmployees: shadowEmployee.length,
+    //     totalInterns
+    //   })
+
+    //   const totalProjectOnHold = await prisma.project.count({
+    //     where: {
+    //         projectStatus: "Idle"
+    //     }
+    //   })
+    //   const totalProject = await prisma.project.count({})
+    //   console.log({
+    //     totalProject,
+    //     totalProjectOnHold,
+    //     totalDirectEmployees: directEmployee.length,
+    //   })
+    // await prisma.skills.createMany({
+    //     data: [
+    //         {id: "6568cf375f945c327873c021", name: "Java"},
+    //         {id: "6568cf375f945c327873c022", name: "Javascript}"},
+    //         {id: "6568cf375f945c327873c023", name: "HTML"},
+    //         {id: "6568cf375f945c327873c024", name: "Python"},
+    //         {id: "6568cf375f945c327873c025", name: "CSS"},
+    //         {id: "6568cf375f945c327873c026", name: "NextJS"},
+    //         {id: "6568cf375f945c327873c027", name: "NestJS"},
+    //         {id: "6568cf375f945c327873c028", name: "ReactJs"},
+    //         {id: "6568cf375f945c327873c029", name: "VueJs"},
+    //         {id: "6568cf375f945c327873c010", name: "NodeJs"},
+    //         {id: "6568cf375f945c327873c011", name: "Anular"},
+    //         {id: "6568cf375f945c327873c012", name: "AI/ML"},
+    //     ]
+    // })
+    // await prisma.designation.createMany({
+    //     data: [
+    //         {id: "6568cf375f945c327873c021", name: "Trainee"},
+    //         {id: "6568cf375f945c327873c022", name: "Software Engineer"},
+    //         {id: "6568cf375f945c327873c023", name: "Senior Software Engineer"},
+    //         {id: "6568cf375f945c327873c024", name: "Technology Analyst"},
+    //         {id: "6568cf375f945c327873c025", name: "Technical lead"},
+    //         {id: "6568cf375f945c327873c026", name: "Manager"},
+    //         {id: "6568cf375f945c327873c027", name: "Architect"},
+    //         {id: "6568cf375f945c327873c028", name: "Senior Architect"},
+    //         {id: "6568cf375f945c327873c029", name: "Human Resource"},
+    //         {id: "6568cf375f945c327873c010", name: "Designer"},
+    //         {id: "6568cf375f945c327873c011", name: "CEO"},
+    //         {id: "6568cf375f945c327873c012", name: "CTO"},
+    //     ]
+    // })
+
+    // for (let i = 0; i < 1; i++) {
+    //     const data = 
+    //     // await prisma.employee.upsert({
+    //     //     where: { id: "6568cf375f945c327873c021" },
+    //     //     create: ,
+    //     //     update: {}
+    //     // })
+    // }
 
 //     await prisma.employee.upsert({
 //         where: { id: "6568cf375f945c327873c022" },
@@ -234,11 +314,11 @@
 //     // })
 
 //     // console.dir(employee, { depth: null })
-// }
+}
 
-// seed().then(res => {
-//     console.log("Seeded")
-// }).catch(err => {
-//     console.log(err)
-//     console.log("Error while Seed")
-// })
+seed().then(res => {
+    console.log("Seeded")
+}).catch(err => {
+    console.log(err)
+    console.log("Error while Seed")
+})

@@ -79,6 +79,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             throw new UnprocessableEntityException(error?.message);
         }
     }
+    async groupBy(tablename: string, query: object) {
+        try {
+            return await this[tablename].groupBy(query);
+        } catch (error: any) {
+            throw new UnprocessableEntityException(error?.message);
+        }
+    }
+
     async findfirst(tablename: string, query: object) {
         try {
             return await this[tablename].findFirst(query);

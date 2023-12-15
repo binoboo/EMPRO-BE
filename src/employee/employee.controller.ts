@@ -109,7 +109,7 @@ export class EmployeeController {
     })
     async deleteEmployee(
         @Param('id') id: string
-    ): Promise<EmployeeResponseDto> {
+    ) {
         return this.employeeService.deleteEmployee(id)
     }
 }
