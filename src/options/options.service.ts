@@ -1,7 +1,6 @@
 import { ROLE, TABLES } from '@/common';
 import { PrismaService } from '@/common/service/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { EMPLOYEESTATUS } from '@prisma/client';
 
 @Injectable()
 export class OptionsService {
@@ -83,9 +82,13 @@ export class OptionsService {
         }
       }
     })
+    const directEmployeeIds = directEmployee?.map((employee : any)=> employee.employeeId);
+    const shadowEmployeeIds = shadowEmployee?.map((employee : any)=> employee.shadowId);
+    const totalWorkingEmployees = new Set([...directEmployeeIds, ...shadowEmployeeIds])
 
 
-    const totalBench = totalEmployees - (directEmployee.length + shadowEmployee.length)
+
+    const totalBench = totalEmployees - new Array(...totalWorkingEmployees).length
 
     const totalProjectOnHold = await this.prismaService.count( TABLES.PROJECT,{
       where: {

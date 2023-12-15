@@ -231,6 +231,7 @@ export class EmployeeService {
     throw new NotFoundException(EMPLOYEE_NOT_EXISTS)
   }
 
+ 
   async refreshEmployeeStatus() {
 
     const directProjectEmployees = await this.prismaService.findMany(TABLES.EMPLOYEEPROJECT, {
@@ -245,8 +246,8 @@ export class EmployeeService {
         shadowId: true
       }
     })
-    const directProjectEmployeeIds = directProjectEmployees.map((employee: any) => employee.employeeId)
-    const shadowProjectEmployeesIds = shadowProjectEmployees.map((employee: any) => employee.shadowId)
+    const directProjectEmployeeIds = directProjectEmployees.filter((employee: any) => Boolean(employee.employeeId)).map((employee: any) => employee.employeeId)
+    const shadowProjectEmployeesIds = shadowProjectEmployees.filter((employee: any) => Boolean(employee.shadowId)).map((employee: any) => employee.shadowId)
     
     await this.prismaService.updateMany(TABLES.EMPLOYEE, {
       where: {

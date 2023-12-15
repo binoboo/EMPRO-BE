@@ -9,8 +9,24 @@
 - [Features](#features)
 - [Installation](#installation)
 
-## Features
+## Steps
 
-1. **Task Management:**
 
-## Installation
+```bash
+  git clone https://github.com/binoboo/EMPRO-BE.git
+```
+
+
+```bash
+  cd EMPRO-BE
+```
+
+```bash
+  npm install
+```
+
+```bash
+  npm run dev
+```
+
+- Open http://localhost:3000/api-docs#/ for swagger
